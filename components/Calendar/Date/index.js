@@ -37,8 +37,8 @@ const Date = ({
       {isSelectThrough && (
         <Styled.DateThroughBg noLeft={isSelectStart} noRight={isSelectEnd} />
       )}
-      {isSelectStart && !isSelecting && <Styled.DateStartCircle />}
       {isSelectEnd && !isSelecting && <Styled.DateEndCircle />}
+      {isSelectStart && !isSelecting && <Styled.DateStartCircle />}
       <Styled.DateText style={textStyle}>{children}</Styled.DateText>
     </Styled.DateWrapper>
   );

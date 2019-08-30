@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import DateComponent from './Date';
 import * as Styled from './styles';
 import getMonthDays, {
@@ -11,12 +11,76 @@ import getMonthDays, {
   zeroPad
 } from './helper';
 
-class Calendar extends Component {
+export const CalendarType = {
+  SelectRange: 'calendar-type-select-range',
+  SelectDate: 'calendar-type-select-date'
+};
+
+class Calendar extends PureComponent {
+  static defaultProps = {
+    type: CalendarType.SelectRange,
+    disabledDates: [],
+    calendarNum: 2
+  };
+
   state = {
     ...this.initState()
   };
 
   initState() {
+    if (this.props.type === CalendarType.SelectRange) {
+      return this.initStateOfTypeRange();
+    }
+    return this.initStateOfTypeDate();
+  }
+
+  initStateOfTypeDate() {
+    const { selectDateStr } = this.props;
+
+    let selectDate;
+    try {
+      selectDate = new Date(selectDateStr);
+    } catch (err) {
+      selectDate = new Date();
+    }
+
+    const month = selectDate.getMonth() + 1;
+    const year = selectDate.getFullYear();
+
+    const minDate = new Date();
+    minDate.setHours(0);
+    minDate.setMinutes(0);
+    minDate.setSeconds(0);
+    minDate.setMilliseconds(0);
+
+    const maxDate = new Date(minDate.getTime());
+    maxDate.setDate(maxDate.getDate() + 90);
+
+    return {
+      month,
+      year,
+      minDate,
+      maxDate,
+      selectStart: selectDate,
+      selectEnd: selectDate,
+      selectMaxDate: null,
+      selectMinDate: null,
+      selectDate,
+      isSelecting: false
+    };
+  }
+
+  initStateOfTypeRange() {
+    const { defaultSelectStart, defaultSelectEnd } = this.props;
+
+    let selectStart, selectEnd;
+    try {
+      selectStart = new Date(defaultSelectStart);
+      selectEnd = new Date(defaultSelectEnd);
+    } catch (err) {
+      selectStart = selectEnd = null;
+    }
+
     const minDate = new Date();
     const month = minDate.getMonth() + 1;
     const year = minDate.getFullYear();
@@ -33,8 +97,8 @@ class Calendar extends Component {
       year,
       minDate,
       maxDate,
-      selectStart: null,
-      selectEnd: null,
+      selectStart,
+      selectEnd,
       selectMaxDate: null,
       selectMinDate: null,
       selectDate: null,
@@ -88,6 +152,19 @@ class Calendar extends Component {
       selectMinDate
     } = this.state;
 
+    const { onSelectDatesChange, type, selectDateStr } = this.props;
+
+    if (type === CalendarType.SelectDate) {
+      const curSelectDateStr = getDateISO(date);
+      if (curSelectDateStr === selectDateStr) {
+        console.log('Can not set same date');
+        return;
+      }
+      onSelectDatesChange &&
+        onSelectDatesChange(curSelectDateStr, curSelectDateStr);
+      return;
+    }
+
     if (isSelecting) {
       // if (date < selectMinDate || date > selectMaxDate) {
       //   return false;
@@ -102,6 +179,7 @@ class Calendar extends Component {
         this.setState({
           isSelecting: false
         });
+        onSelectDatesChange && onSelectDatesChange(startDateISO, endDateISO);
       }
     } else {
       const { selectMaxDate, selectMinDate } = this.getSelectDateRange(date);
@@ -217,12 +295,12 @@ class Calendar extends Component {
     return <DateComponent {...props}>{text}</DateComponent>;
   };
 
-  renderCalendar(month, year) {
+  renderCalendar(month, year, key) {
     const monthDays = getMonthDays(month, year);
     const renderDates = this.renderMonthDates(month);
 
     return (
-      <Styled.CalendarWrapper>
+      <Styled.CalendarWrapper key={key}>
         {this.renderMonthAndYear(month, year)}
         <Styled.Body>
           <>{Object.keys(WEEK_DAYS).map(this.renderDayLabel)}</>
@@ -233,23 +311,52 @@ class Calendar extends Component {
   }
 
   render() {
-    const { month, year } = this.state;
-    const { month: nextMonth, year: nextMonthYear } = getNextMonth(month, year);
+    const { calendarNum } = this.props;
+    const calendarList = [];
+    let { month, year } = this.state;
+    for (let i = 0; i < calendarNum; i++) {
+      if (i > 0) {
+        const nextMonthInfo = getNextMonth(month, year);
+        month = nextMonthInfo.month;
+        year = nextMonthInfo.year;
+      }
+      calendarList.push(this.renderCalendar(month, year, i));
+    }
 
     return (
       <Styled.Container>
         <Styled.LeftArrow
           src="/static/left_arrow.png"
+          title="Prev Month"
           onMouseDown={this.toPrevMonth}
         />
         <Styled.RightArrow
           src="/static/right_arrow.png"
+          title="Next Month"
           onMouseDown={this.toNextMonth}
         />
-        {this.renderCalendar(month, year)}
-        {this.renderCalendar(nextMonth, nextMonthYear)}
+        {calendarList}
       </Styled.Container>
     );
+  }
+
+  componentDidUpdate(prevProps) {
+    const { selectDateStr: prevSelectDateStr } = prevProps;
+    const { selectDateStr, type } = this.props;
+    if (type === CalendarType.SelectDate) {
+      if (selectDateStr !== prevSelectDateStr) {
+        try {
+          const newSelectDate = new Date(selectDateStr);
+          this.setState({
+            selectStart: newSelectDate,
+            selectEnd: newSelectDate,
+            selectDate: newSelectDate
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
   }
 }
 

@@ -104,7 +104,7 @@ const BookingBtn = styled.div`
   }
 `;
 
-const RoomSlide = ({ imgList, onClickBookingBtn }) => {
+const RoomSlide = ({ imgList, onClickBookingBtn, totalPrice, totalNight }) => {
   return (
     <SliderArea>
       <Slider type={SliderType.NormalCenter} imgList={imgList} />
@@ -113,9 +113,9 @@ const RoomSlide = ({ imgList, onClickBookingBtn }) => {
       </Link>
       <BookingBtnArea>
         <BookingPrice>
-          <span>$1,380</span>
+          <span>{totalPrice}</span>
           <span>/</span>
-          <span>1晚</span>
+          <span>{totalNight}晚</span>
         </BookingPrice>
         <BookingBtn onClick={onClickBookingBtn}>Booking now</BookingBtn>
       </BookingBtnArea>

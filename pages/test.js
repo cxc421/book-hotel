@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import styled from 'styled-components';
 import Calendar from '../components/Calendar';
+import DatePicker from '../components/Datepicker';
 
 const Container = styled.div`
   position: relative;
@@ -8,12 +10,31 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+`;
+
+const DatePickerArea = styled.div`
+  margin-top: 20px;
+  width: 315px;
+  padding: 20px;
+  box-sizing: content-box;
+  background: rgb(56, 71, 11);
 `;
 
 export default () => {
+  const [selectDateStr, setSelectDateStr] = useState('2019-09-09');
+
+  const onSelectDatesChange = (dateStartStr, dateEndStr) => {
+    console.log({ dateStartStr, dateEndStr });
+  };
+
+  function onSelectDateChange(newSelectDateStr) {
+    setSelectDateStr(newSelectDateStr);
+  }
+
   return (
     <Container>
-      <Calendar
+      {/* <Calendar
         disabledDates={[
           '2019-08-01',
           '2019-08-02',
@@ -28,7 +49,14 @@ export default () => {
           '2019-08-31',
           '2019-09-11'
         ]}
-      />
+        onSelectDatesChange={onSelectDatesChange}
+      /> */}
+      <DatePickerArea>
+        <DatePicker
+          selectDateStr={selectDateStr}
+          onChange={onSelectDateChange}
+        />
+      </DatePickerArea>
     </Container>
   );
 };

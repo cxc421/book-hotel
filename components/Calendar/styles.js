@@ -8,6 +8,8 @@ export const Container = styled.div`
   color: rgb(56, 71, 11);
   font-family: 'Open Sans';
   position: relative;
+  background: white;
+  user-select: none;
 `;
 
 export const CalendarWrapper = styled.div`
@@ -103,17 +105,33 @@ export const DisabledDate = styled.div`
 
 const Arrow = styled.img`
   display: block;
-  cursor: pointer;
-  padding: 5px;
+`;
+
+const ArrowWrpaaer = styled.div`
+  display: block;
+  cursor: default;
   position: absolute;
-  top: 30px;
-  /* background: rgb(245, 245, 245); */
+  top: 21px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+
+  &:hover {
+    background: rgb(245, 245, 245);
+  }
 `;
 
-export const LeftArrow = styled(Arrow)`
-  left: 20px;
-`;
+export const LeftArrow = memo(({ src, onMouseDown, title }) => (
+  <ArrowWrpaaer style={{ left: 9 }} onMouseDown={onMouseDown} title={title}>
+    <Arrow src={src} />
+  </ArrowWrpaaer>
+));
 
-export const RightArrow = styled(Arrow)`
-  right: 20px;
-`;
+export const RightArrow = memo(({ src, onMouseDown, title }) => (
+  <ArrowWrpaaer style={{ right: 9 }} onMouseDown={onMouseDown} title={title}>
+    <Arrow src={src} />
+  </ArrowWrpaaer>
+));
