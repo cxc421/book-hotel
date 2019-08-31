@@ -8,6 +8,7 @@ import getMonthDays, {
   getNextMonth,
   getDateISO,
   isSameDay,
+  isDate,
   zeroPad
 } from './helper';
 
@@ -35,7 +36,7 @@ class Calendar extends PureComponent {
   }
 
   initStateOfTypeDate() {
-    const { selectDateStr } = this.props;
+    const { selectDateStr, disabledDates } = this.props;
 
     let selectDate;
     try {
@@ -66,12 +67,13 @@ class Calendar extends PureComponent {
       selectMaxDate: null,
       selectMinDate: null,
       selectDate,
-      isSelecting: false
+      isSelecting: false,
+      disabledDates
     };
   }
 
   initStateOfTypeRange() {
-    const { defaultSelectStart, defaultSelectEnd } = this.props;
+    const { defaultSelectStart, defaultSelectEnd, disabledDates } = this.props;
 
     let selectStart, selectEnd;
     try {
@@ -102,12 +104,12 @@ class Calendar extends PureComponent {
       selectMaxDate: null,
       selectMinDate: null,
       selectDate: null,
-      isSelecting: false
+      isSelecting: false,
+      disabledDates
     };
   }
 
-  getSelectDateRange = date => {
-    const { disabledDates } = this.props;
+  getSelectDateRange = (date, disabledDates) => {
     const { minDate, maxDate } = this.state;
     const dateStr = getDateISO(date);
 
@@ -143,6 +145,22 @@ class Calendar extends PureComponent {
     };
   };
 
+  getNewDiabledDates = selectStart => {
+    const { disabledDates } = this.props;
+    const newDisabledDates = Array.from(disabledDates);
+    if (isDate(selectStart)) {
+      let disabledDateLen = newDisabledDates.length;
+      for (let i = 0; i < disabledDateLen; i++) {
+        const _date = new Date(newDisabledDates[i]);
+        if (_date > selectStart) {
+          newDisabledDates.splice(i, 1);
+          break;
+        }
+      }
+    }
+    return newDisabledDates;
+  };
+
   onClickDate = date => {
     const {
       selectStart,
@@ -166,10 +184,6 @@ class Calendar extends PureComponent {
     }
 
     if (isSelecting) {
-      // if (date < selectMinDate || date > selectMaxDate) {
-      //   return false;
-      // }
-
       const startDateISO = getDateISO(selectStart);
       const endDateISO = getDateISO(selectEnd);
 
@@ -177,12 +191,24 @@ class Calendar extends PureComponent {
         console.log('Can not select same date');
       } else {
         this.setState({
-          isSelecting: false
+          isSelecting: false,
+          disabledDates: !this.props.disabledDates.includes(endDateISO)
+            ? this.props.disabledDates
+            : this.state.disabledDates
         });
         onSelectDatesChange && onSelectDatesChange(startDateISO, endDateISO);
       }
     } else {
-      const { selectMaxDate, selectMinDate } = this.getSelectDateRange(date);
+      if (this.props.disabledDates.includes(getDateISO(date))) {
+        console.log('Can not select disabled dates');
+        return false;
+      }
+
+      const newDisabledDates = this.getNewDiabledDates(date);
+      const { selectMaxDate, selectMinDate } = this.getSelectDateRange(
+        date,
+        newDisabledDates
+      );
 
       this.setState({
         selectDate: date,
@@ -190,7 +216,8 @@ class Calendar extends PureComponent {
         selectEnd: date,
         selectMaxDate,
         selectMinDate,
-        isSelecting: true
+        isSelecting: true,
+        disabledDates: newDisabledDates
       });
     }
   };
@@ -261,7 +288,8 @@ class Calendar extends PureComponent {
   };
 
   renderMonthDates = month => (date, index) => {
-    const { disabledDates } = this.props;
+    const { disabledDates } = this.state;
+
     const {
       selectStart,
       selectEnd,
@@ -340,7 +368,7 @@ class Calendar extends PureComponent {
     );
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     const { selectDateStr: prevSelectDateStr } = prevProps;
     const { selectDateStr, type } = this.props;
     if (type === CalendarType.SelectDate) {
@@ -356,6 +384,15 @@ class Calendar extends PureComponent {
           console.error(err);
         }
       }
+    }
+  }
+
+  componentDidMount() {
+    if (this.props.disabledDates.includes(this.state.selectEnd)) {
+      const newDisabledDates = this.getNewDiabledDates(this.state.selectStart);
+      this.setState({
+        disabledDates: newDisabledDates
+      });
     }
   }
 }

@@ -12,6 +12,8 @@ const Box = styled.div`
   height: 136px;
   border-radius: 0 0 10px 10px;
   border: 1px solid #949c7c;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const BoxTop = styled.div`
@@ -29,6 +31,8 @@ const BoxBottom = styled.div`
   align-items: center;
   font-size: 12px;
   font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const NextIcon = styled.img`

@@ -9,7 +9,7 @@ export const Mask = styled.div`
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(20px);
 
-  transition: all 225ms;
+  transition: all 200ms;
 
   &.show {
     opacity: 1;
@@ -61,6 +61,11 @@ export const InputText = styled.input`
   padding: 8px 10px;
   margin-bottom: 16px;
   display: block;
+`;
+
+export const DatePickerArea = styled.div`
+  margin-top: 7px;
+  margin-bottom: 16px;
 `;
 
 export const DayCountText = styled.div`
@@ -128,6 +133,7 @@ export const Right = styled.div`
   padding: 51px 100px 26px 30px;
   flex-grow: 1;
   color: #38470b;
+  overflow: hidden;
 `;
 
 export const Title = styled.div`

@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import * as Styled from './styles';
+import DatePicker from '../Datepicker';
 import Amenities, { AmenityType } from '../Amenities';
 import BookingSteps from '../BookingSteps';
 
@@ -15,7 +16,9 @@ const Dialog = ({
   checkOut,
   totalPrice,
   normalDayCount,
-  holidayCount
+  holidayCount,
+  selectDateStart,
+  selectDateEnd
 }) => {
   const className = show ? 'show' : 'hide';
   const dayString =
@@ -43,19 +46,19 @@ const Dialog = ({
           <Styled.Label htmlFor="phone-input">手機號碼</Styled.Label>
           <Styled.InputText id="phone-input" type="tel" required={true} />
           <Styled.Label htmlFor="checkin-input">入住日期</Styled.Label>
-          <Styled.InputText
-            id="checkin-input"
-            type="date"
-            defaultValue="2019-08-19"
-            required={true}
-          />
+          <Styled.DatePickerArea>
+            <DatePicker
+              selectDateStr={selectDateStart}
+              onChange={str => console.log(str)}
+            />
+          </Styled.DatePickerArea>
           <Styled.Label htmlFor="checkout-input">退房日期</Styled.Label>
-          <Styled.InputText
-            id="checkout-input"
-            type="date"
-            defaultValue="2019-08-20"
-            required={true}
-          />
+          <Styled.DatePickerArea>
+            <DatePicker
+              selectDateStr={selectDateEnd}
+              onChange={str => console.log(str)}
+            />
+          </Styled.DatePickerArea>
           <Styled.DayCountText>{dayString}</Styled.DayCountText>
           <Styled.MoneyTotal>
             <div>總計</div>

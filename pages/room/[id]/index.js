@@ -24,15 +24,27 @@ class RoomPage extends React.Component {
   };
 
   initState() {
+    const disabledDates = this.props.booking.map(obj => obj.date);
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    let selectDateStart = new Date();
+    while (disabledDates.includes(getDateISO(selectDateStart))) {
+      selectDateStart.setDate(selectDateStart.getDate() + 1);
+    }
+    if (selectDateStart - today > 60 * 24 * 60 * 60 * 1000) {
+      console.error('No date can select');
+      selectDateStart = null;
+    }
+    let selectDateEnd = null;
+    if (selectDateStart) {
+      selectDateEnd = new Date(selectDateStart);
+      selectDateEnd.setDate(selectDateEnd.getDate() + 1);
+    }
 
     return {
       canDiaplsy: this.props.loadFromBrowser,
       showDiloag: false,
-      selectDateStart: getDateISO(today),
-      selectDateEnd: getDateISO(tomorrow)
+      selectDateStart: getDateISO(selectDateStart),
+      selectDateEnd: getDateISO(selectDateEnd)
     };
   }
 
@@ -120,7 +132,7 @@ class RoomPage extends React.Component {
     if (!this.state.canDiaplsy) {
       return null;
     }
-
+    const { selectDateStart, selectDateEnd } = this.state;
     const { room, booking } = this.props;
     const { normalDayPrice, holidayPrice } = room;
     const { normalDayCount, holidayCount } = this.getPriceInfo();
@@ -132,6 +144,9 @@ class RoomPage extends React.Component {
     const shortDescription = this.getShortDescription();
     const priceDescription = `平日（一～四）價格：${normalDayPrice} \xa0\xa0/\xa0\xa0 假日（五〜日）價格：${holidayPrice}`;
     const { checkInEarly, checkInLate, checkOut } = room.checkInAndOut;
+    const disabledDates = booking.map(obj => obj.date);
+
+    // console.log({ booking });
 
     return (
       <>
@@ -168,9 +183,9 @@ class RoomPage extends React.Component {
           <Styled.EmptyRoomTitle>空房狀態查詢</Styled.EmptyRoomTitle>
           <Styled.CalendarArea>
             <Calendar
-              disabledDates={[]}
-              defaultSelectStart={null}
-              defaultSelectEnd={null}
+              disabledDates={disabledDates}
+              defaultSelectStart={selectDateStart}
+              defaultSelectEnd={selectDateEnd}
               onSelectDatesChange={this.onSelectDatesChange}
             />
           </Styled.CalendarArea>
@@ -188,6 +203,8 @@ class RoomPage extends React.Component {
           totalPrice={totalCurrency}
           normalDayCount={normalDayCount}
           holidayCount={holidayCount}
+          selectDateStart={selectDateStart}
+          selectDateEnd={selectDateEnd}
         />
       </>
     );
