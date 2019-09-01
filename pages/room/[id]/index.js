@@ -9,6 +9,7 @@ import { getDateISO } from '../../../components/Calendar/helper';
 import * as Styled from './styles';
 import toCurrency from '../../../helpers/currency';
 import getPriceInfo from '../../../helpers/getPriceInfo';
+import Lightbox from '../../../components/LightBox';
 
 class RoomPage extends React.Component {
   static getInitialProps = async ({ query }) => {
@@ -42,7 +43,37 @@ class RoomPage extends React.Component {
   }
 
   state = {
-    ...this.initState()
+    ...this.initState(),
+    lightboxShow: true,
+    lightboxImgIndex: 0
+  };
+
+  onClickSlide = index => {
+    this.setState({
+      lightboxShow: true,
+      lightboxImgIndex: index
+    });
+  };
+
+  closeLightBox = () => {
+    this.setState({
+      lightboxShow: false
+    });
+  };
+
+  toNextLightboxImg = () => {
+    const { lightboxImgIndex } = this.state;
+    const maxLength = this.props.room.imageUrl.length - 1;
+    if (lightboxImgIndex < maxLength) {
+      this.setState({ lightboxImgIndex: lightboxImgIndex + 1 });
+    }
+  };
+
+  toPrevLightboxImg = () => {
+    const { lightboxImgIndex } = this.state;
+    if (lightboxImgIndex > 0) {
+      this.setState({ lightboxImgIndex: lightboxImgIndex - 1 });
+    }
   };
 
   computeDefaultDatesByBooking(booking) {
@@ -193,7 +224,9 @@ class RoomPage extends React.Component {
       selectDateEnd,
       booking,
       showDiloag,
-      dialogType
+      dialogType,
+      lightboxShow,
+      lightboxImgIndex
     } = this.state;
     const { room } = this.props;
     const { normalDayPrice, holidayPrice } = room;
@@ -218,6 +251,7 @@ class RoomPage extends React.Component {
           onClickBookingBtn={this.openDialog}
           totalPrice={totalCurrency}
           totalNight={totalNight}
+          onClickSlide={this.onClickSlide}
         />
         <Styled.ContentArea>
           <Styled.ContentTopRow>
@@ -270,6 +304,14 @@ class RoomPage extends React.Component {
           normalDayPrice={normalDayPrice}
           holidayPrice={holidayPrice}
           onSubmit={this.onSubmit}
+        />
+        <Lightbox
+          show={lightboxShow}
+          onClose={this.closeLightBox}
+          imgList={imgList}
+          imgIdx={lightboxImgIndex}
+          toNextImg={this.toNextLightboxImg}
+          toPrevImg={this.toPrevLightboxImg}
         />
       </>
     );

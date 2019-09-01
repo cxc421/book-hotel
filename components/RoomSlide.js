@@ -10,6 +10,7 @@ const SliderArea = styled.div`
   position: fixed;
   top: 0;
   left: 0;
+  cursor: pointer;
 `;
 
 const PrePageAnchor = styled.a`
@@ -104,10 +105,20 @@ const BookingBtn = styled.div`
   }
 `;
 
-const RoomSlide = ({ imgList, onClickBookingBtn, totalPrice, totalNight }) => {
+const RoomSlide = ({
+  imgList,
+  onClickBookingBtn,
+  totalPrice,
+  totalNight,
+  onClickSlide
+}) => {
   return (
     <SliderArea>
-      <Slider type={SliderType.NormalCenter} imgList={imgList} />
+      <Slider
+        type={SliderType.NormalCenter}
+        imgList={imgList}
+        onClick={onClickSlide}
+      />
       <Link href="/" passHref={true}>
         <PrePageAnchor>查看其它房型</PrePageAnchor>
       </Link>

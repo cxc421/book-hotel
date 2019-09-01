@@ -103,7 +103,7 @@ const Img = styled.div`
   }}
 `;
 
-const Slider = ({ imgList = [], type = SliderType.DarkLeft }) => {
+const Slider = ({ imgList = [], type = SliderType.DarkLeft, onClick }) => {
   const imgNum = imgList.length;
   const wrapperStyle = {
     width: imgNum * 100 + '%'
@@ -123,10 +123,6 @@ const Slider = ({ imgList = [], type = SliderType.DarkLeft }) => {
         ? 'slick-custom-normalcenter'
         : 'slick-custom-darkleft')
   };
-
-  function onClick(index) {
-    console.log('click-' + index);
-  }
 
   return (
     <Container>
