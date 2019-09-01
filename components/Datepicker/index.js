@@ -37,7 +37,7 @@ class DatePicker extends PureComponent {
 
   render() {
     const { showCalendar } = this.state;
-    const { selectDateStr } = this.props;
+    const { selectDateStr, disabledDates } = this.props;
     const showDateStr = selectDateStr.split('-').join(' - ');
 
     return (
@@ -51,6 +51,7 @@ class DatePicker extends PureComponent {
               type={CalendarType.SelectDate}
               selectDateStr={selectDateStr}
               onSelectDatesChange={this.onSelectDatesChange}
+              disabledDates={disabledDates}
             />
           </Styled.CalendarArea>
         )}

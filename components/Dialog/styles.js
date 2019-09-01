@@ -109,8 +109,15 @@ export const ConfirmBtn = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: white;
-    color: #38470b;
+    background: #949c7c;
+    border-color: #949c7c;
+  }
+
+  &.have-error {
+    border-color: lightgrey;
+    color: lightgray;
+    font-style: italic;
+    pointer-events: none;
   }
 `;
 
@@ -198,4 +205,38 @@ export const BookInfoUl = styled.ul`
   > li {
     line-height: 26px;
   }
+`;
+
+export const ErrorMsg = styled.span`
+  color: red;
+  margin-left: 10px;
+  font-style: italic;
+`;
+
+export const ResultContent = styled.div`
+  width: 100%;
+  height: 100%;
+  background: rgba(56, 71, 11, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const ResultImg = styled.img`
+  margin-top: 125px;
+`;
+
+export const ResultTitle = styled.h2`
+  font-size: 50px;
+  font-weight: 500;
+  margin-top: 42px;
+  color: white;
+`;
+
+export const ResultParagraph = styled.p`
+  font-size: 18px;
+  font-weight: 300;
+  margin-top: 41px;
+  color: white;
+  text-align: center;
 `;

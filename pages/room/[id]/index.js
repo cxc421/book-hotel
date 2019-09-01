@@ -1,13 +1,14 @@
-import { getRoomById } from '../../../api';
+import { getRoomById, bookRoom, cancelRequest } from '../../../api';
 import loading from '../../../loading';
 import trans from '../../../translation';
 import Amenities from '../../../components/Amenities';
 import RoomSlide from '../../../components/RoomSlide';
-import Dialog from '../../../components/Dialog';
+import Dialog, { DialogType } from '../../../components/Dialog';
 import Calendar from '../../../components/Calendar';
 import { getDateISO } from '../../../components/Calendar/helper';
 import * as Styled from './styles';
 import toCurrency from '../../../helpers/currency';
+import getPriceInfo from '../../../helpers/getPriceInfo';
 
 class RoomPage extends React.Component {
   static getInitialProps = async ({ query }) => {
@@ -19,14 +20,36 @@ class RoomPage extends React.Component {
     };
   };
 
+  updateBooking(booking) {
+    const {
+      selectDateStart,
+      selectDateEnd
+    } = this.computeDefaultDatesByBooking(booking);
+
+    this.setState({
+      booking,
+      selectDateStart,
+      selectDateEnd
+    });
+  }
+
+  async refetchData() {
+    loading.start();
+    const roomData = await getRoomById(this.props.room.id);
+    this.updateBooking(roomData.booking);
+    this.setState({ canDiaplsy: true });
+    loading.done();
+  }
+
   state = {
     ...this.initState()
   };
 
-  initState() {
-    const disabledDates = this.props.booking.map(obj => obj.date);
+  computeDefaultDatesByBooking(booking) {
+    const disabledDates = booking.map(obj => obj.date);
     const today = new Date();
     let selectDateStart = new Date();
+    selectDateStart.setDate(today.getDate() + 1);
     while (disabledDates.includes(getDateISO(selectDateStart))) {
       selectDateStart.setDate(selectDateStart.getDate() + 1);
     }
@@ -40,22 +63,36 @@ class RoomPage extends React.Component {
       selectDateEnd.setDate(selectDateEnd.getDate() + 1);
     }
 
+    const result = {
+      selectDateStart: getDateISO(selectDateStart),
+      selectDateEnd: getDateISO(selectDateEnd)
+    };
+    // console.log(result);
+    return result;
+  }
+
+  initState() {
+    const {
+      selectDateStart,
+      selectDateEnd
+    } = this.computeDefaultDatesByBooking(this.props.booking);
+
     return {
       canDiaplsy: this.props.loadFromBrowser,
       showDiloag: false,
-      selectDateStart: getDateISO(selectDateStart),
-      selectDateEnd: getDateISO(selectDateEnd)
+      dialogType: DialogType.Form,
+      selectDateStart,
+      selectDateEnd,
+      booking: this.props.booking
     };
   }
 
   componentDidMount() {
     if (!this.state.canDiaplsy) {
-      loading.start();
-      setTimeout(() => {
-        loading.done();
-        this.setState({ canDiaplsy: true });
-      }, 1000);
+      console.log('load by browser');
+      this.refetchData();
     } else {
+      console.log('load by server');
       loading.done();
     }
   }
@@ -97,45 +134,73 @@ class RoomPage extends React.Component {
     });
   };
 
-  getPriceInfo() {
-    const { selectDateStart, selectDateEnd } = this.state;
-    const startDate = new Date(selectDateStart);
-    const endDate = new Date(selectDateEnd);
-    const oneDatMilSec = 86400000;
-    const dayCount = (endDate - startDate) / oneDatMilSec;
-
-    let normalDayCount = 0;
-    let holidayCount = 0;
-    for (let i = 0; i < dayCount; i++) {
-      const date = new Date(startDate.getTime() + oneDatMilSec * i);
-      const day = date.getDay();
-      if (day >= 1 && day <= 4) {
-        normalDayCount++;
-      } else {
-        holidayCount++;
-      }
-    }
-
-    const info = { normalDayCount, holidayCount };
-    return info;
-  }
-
   closeDialog = () => {
     this.setState({ showDiloag: false });
   };
 
   openDialog = () => {
-    this.setState({ showDiloag: true });
+    this.setState({ showDiloag: true, dialogType: DialogType.Form });
   };
+
+  onSubmit = async data => {
+    const roomId = this.props.room.id;
+    if (!roomId) {
+      return false;
+    }
+
+    loading.start();
+    const result = await bookRoom(roomId, data);
+    loading.done();
+
+    if (result.success) {
+      const newBooking = [...this.state.booking, ...result.booking];
+
+      this.updateBooking(newBooking);
+      console.log('success');
+      console.log('new booking:', newBooking);
+
+      this.setState({
+        dialogType: DialogType.Success,
+        showDiloag: true
+      });
+    } else {
+      this.setState({
+        dialogType: DialogType.Failed,
+        showDiloag: true
+      });
+    }
+  };
+
+  getDisabledDates = (() => {
+    let preJson = null;
+    let preDisabledDates = [];
+    return booking => {
+      const bookingJson = JSON.stringify(booking);
+      if (bookingJson !== preJson) {
+        preJson = bookingJson;
+        preDisabledDates = booking.map(obj => obj.date).sort();
+      }
+      return preDisabledDates;
+    };
+  })();
 
   render() {
     if (!this.state.canDiaplsy) {
       return null;
     }
-    const { selectDateStart, selectDateEnd } = this.state;
-    const { room, booking } = this.props;
+    const {
+      selectDateStart,
+      selectDateEnd,
+      booking,
+      showDiloag,
+      dialogType
+    } = this.state;
+    const { room } = this.props;
     const { normalDayPrice, holidayPrice } = room;
-    const { normalDayCount, holidayCount } = this.getPriceInfo();
+    const { normalDayCount, holidayCount } = getPriceInfo(
+      selectDateStart,
+      selectDateEnd
+    );
     const totalPrice =
       normalDayCount * normalDayPrice + holidayCount * holidayPrice;
     const totalCurrency = toCurrency(totalPrice);
@@ -144,9 +209,7 @@ class RoomPage extends React.Component {
     const shortDescription = this.getShortDescription();
     const priceDescription = `平日（一～四）價格：${normalDayPrice} \xa0\xa0/\xa0\xa0 假日（五〜日）價格：${holidayPrice}`;
     const { checkInEarly, checkInLate, checkOut } = room.checkInAndOut;
-    const disabledDates = booking.map(obj => obj.date);
-
-    // console.log({ booking });
+    const disabledDates = this.getDisabledDates(booking);
 
     return (
       <>
@@ -184,14 +247,15 @@ class RoomPage extends React.Component {
           <Styled.CalendarArea>
             <Calendar
               disabledDates={disabledDates}
-              defaultSelectStart={selectDateStart}
-              defaultSelectEnd={selectDateEnd}
+              selectStartStr={selectDateStart}
+              selectEndStr={selectDateEnd}
               onSelectDatesChange={this.onSelectDatesChange}
             />
           </Styled.CalendarArea>
         </Styled.ContentArea>
         <Dialog
-          show={this.state.showDiloag}
+          show={showDiloag}
+          type={dialogType}
           toClose={this.closeDialog}
           amenities={room.amenities}
           roomName={room.name}
@@ -200,11 +264,12 @@ class RoomPage extends React.Component {
           checkInEarly={checkInEarly}
           checkInLate={checkInLate}
           checkOut={checkOut}
-          totalPrice={totalCurrency}
-          normalDayCount={normalDayCount}
-          holidayCount={holidayCount}
           selectDateStart={selectDateStart}
           selectDateEnd={selectDateEnd}
+          disabledDates={disabledDates}
+          normalDayPrice={normalDayPrice}
+          holidayPrice={holidayPrice}
+          onSubmit={this.onSubmit}
         />
       </>
     );

@@ -29,3 +29,14 @@ export const getRoomById = async id => {
   const data = await res.data;
   return data;
 };
+
+export const bookRoom = async (id, data) => {
+  const res = await axios({
+    url: 'https://challenge.thef2e.com/api/thef2e2019/stage6/room/' + id,
+    method: 'post',
+    headers,
+    data
+  });
+  const resData = await res.data;
+  return resData;
+};

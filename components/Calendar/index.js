@@ -24,6 +24,8 @@ class Calendar extends PureComponent {
     calendarNum: 2
   };
 
+  defaultMaxDate = null;
+
   state = {
     ...this.initState()
   };
@@ -49,6 +51,7 @@ class Calendar extends PureComponent {
     const year = selectDate.getFullYear();
 
     const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 1);
     minDate.setHours(0);
     minDate.setMinutes(0);
     minDate.setSeconds(0);
@@ -56,6 +59,7 @@ class Calendar extends PureComponent {
 
     const maxDate = new Date(minDate.getTime());
     maxDate.setDate(maxDate.getDate() + 90);
+    this.defaultMaxDate = maxDate;
 
     return {
       month,
@@ -73,12 +77,12 @@ class Calendar extends PureComponent {
   }
 
   initStateOfTypeRange() {
-    const { defaultSelectStart, defaultSelectEnd, disabledDates } = this.props;
+    const { selectStartStr, selectEndStr, disabledDates } = this.props;
 
     let selectStart, selectEnd;
     try {
-      selectStart = new Date(defaultSelectStart);
-      selectEnd = new Date(defaultSelectEnd);
+      selectStart = new Date(selectStartStr);
+      selectEnd = new Date(selectEndStr);
     } catch (err) {
       selectStart = selectEnd = null;
     }
@@ -86,6 +90,7 @@ class Calendar extends PureComponent {
     const minDate = new Date();
     const month = minDate.getMonth() + 1;
     const year = minDate.getFullYear();
+    minDate.setDate(minDate.getDate() + 1);
     minDate.setHours(0);
     minDate.setMinutes(0);
     minDate.setSeconds(0);
@@ -93,6 +98,7 @@ class Calendar extends PureComponent {
 
     const maxDate = new Date(minDate.getTime());
     maxDate.setDate(maxDate.getDate() + 90);
+    this.defaultMaxDate = maxDate;
 
     return {
       month,
@@ -147,18 +153,20 @@ class Calendar extends PureComponent {
 
   getNewDiabledDates = selectStart => {
     const { disabledDates } = this.props;
-    const newDisabledDates = Array.from(disabledDates);
+    const newDisabledDates = Array.from(disabledDates).sort();
+    let newMaxDate = null;
     if (isDate(selectStart)) {
       let disabledDateLen = newDisabledDates.length;
       for (let i = 0; i < disabledDateLen; i++) {
         const _date = new Date(newDisabledDates[i]);
         if (_date > selectStart) {
           newDisabledDates.splice(i, 1);
+          newMaxDate = _date;
           break;
         }
       }
     }
-    return newDisabledDates;
+    return { newDisabledDates, newMaxDate };
   };
 
   onClickDate = date => {
@@ -170,7 +178,12 @@ class Calendar extends PureComponent {
       selectMinDate
     } = this.state;
 
-    const { onSelectDatesChange, type, selectDateStr } = this.props;
+    const {
+      onSelectDatesChange,
+      type,
+      selectDateStr,
+      disabledDates
+    } = this.props;
 
     if (type === CalendarType.SelectDate) {
       const curSelectDateStr = getDateISO(date);
@@ -189,22 +202,23 @@ class Calendar extends PureComponent {
 
       if (startDateISO === endDateISO) {
         console.log('Can not select same date');
-      } else {
-        this.setState({
-          isSelecting: false,
-          disabledDates: !this.props.disabledDates.includes(endDateISO)
-            ? this.props.disabledDates
-            : this.state.disabledDates
-        });
-        onSelectDatesChange && onSelectDatesChange(startDateISO, endDateISO);
+        return;
       }
+      this.setState({
+        isSelecting: false,
+        disabledDates: !this.props.disabledDates.includes(endDateISO)
+          ? this.props.disabledDates
+          : this.state.disabledDates,
+        maxDate: this.defaultMaxDate
+      });
+      onSelectDatesChange && onSelectDatesChange(startDateISO, endDateISO);
     } else {
-      if (this.props.disabledDates.includes(getDateISO(date))) {
+      if (disabledDates.includes(getDateISO(date))) {
         console.log('Can not select disabled dates');
         return false;
       }
 
-      const newDisabledDates = this.getNewDiabledDates(date);
+      const { newDisabledDates, newMaxDate } = this.getNewDiabledDates(date);
       const { selectMaxDate, selectMinDate } = this.getSelectDateRange(
         date,
         newDisabledDates
@@ -217,7 +231,8 @@ class Calendar extends PureComponent {
         selectMaxDate,
         selectMinDate,
         isSelecting: true,
-        disabledDates: newDisabledDates
+        disabledDates: newDisabledDates,
+        maxDate: newMaxDate || this.defaultMaxDate
       });
     }
   };
@@ -369,10 +384,12 @@ class Calendar extends PureComponent {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { selectDateStr: prevSelectDateStr } = prevProps;
-    const { selectDateStr, type } = this.props;
+    const { type } = this.props;
+
     if (type === CalendarType.SelectDate) {
-      if (selectDateStr !== prevSelectDateStr) {
+      const { selectDateStr } = this.props;
+
+      if (selectDateStr !== prevProps.selectDateStr) {
         try {
           const newSelectDate = new Date(selectDateStr);
           this.setState({
@@ -384,14 +401,56 @@ class Calendar extends PureComponent {
           console.error(err);
         }
       }
+    } else if (type === CalendarType.SelectRange) {
+      const { selectStartStr, selectEndStr, disabledDates } = this.props;
+
+      if (selectStartStr !== prevProps.selectStartStr) {
+        this.setState({
+          selectStart: new Date(selectStartStr)
+        });
+      }
+
+      if (
+        selectEndStr !== prevProps.selectEndStr ||
+        disabledDates !== prevProps.disabledDates
+      ) {
+        if (disabledDates.includes(selectEndStr)) {
+          const newSelectStart = new Date(selectStartStr);
+          const { newDisabledDates, newMaxDate } = this.getNewDiabledDates(
+            newSelectStart
+          );
+          this.setState(prevState => {
+            return {
+              disabledDates: newDisabledDates,
+              selectEnd: new Date(selectEndStr),
+              maxDate: prevState.isSelecting
+                ? newMaxDate || this.defaultMaxDate
+                : this.defaultMaxDate
+            };
+          });
+        } else {
+          this.setState({
+            disabledDates,
+            selectEnd: new Date(selectEndStr)
+          });
+        }
+      }
     }
   }
 
   componentDidMount() {
-    if (this.props.disabledDates.includes(this.state.selectEnd)) {
-      const newDisabledDates = this.getNewDiabledDates(this.state.selectStart);
-      this.setState({
-        disabledDates: newDisabledDates
+    if (this.props.disabledDates.includes(getDateISO(this.state.selectEnd))) {
+      const { newDisabledDates, newMaxDate } = this.getNewDiabledDates(
+        this.state.selectStart
+      );
+
+      this.setState(prevState => {
+        return {
+          disabledDates: newDisabledDates,
+          maxDate: prevState.isSelecting
+            ? newMaxDate || this.defaultMaxDate
+            : this.defaultMaxDate
+        };
       });
     }
   }
