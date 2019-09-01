@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import * as Styled from './styles';
 
@@ -25,6 +25,24 @@ export default ({
     preventPropa(e);
     toNextImg();
   };
+
+  useEffect(() => {
+    const onKeyDown = function(e) {
+      if (e.keyCode === 27) {
+        onClose();
+      }
+    };
+
+    if (show) {
+      document.addEventListener('keydown', onKeyDown);
+    }
+
+    return () => {
+      if (show) {
+        document.removeEventListener('keydown', onKeyDown);
+      }
+    };
+  }, [show, onClose]);
 
   return (
     <CSSTransition
