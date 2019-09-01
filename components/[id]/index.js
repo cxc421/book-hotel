@@ -1,26 +1,17 @@
-import { getRoomById, bookRoom, cancelRequest } from '../../../api';
-import loading from '../../../loading';
-import trans from '../../../translation';
-import Amenities from '../../../components/Amenities';
-import RoomSlide from '../../../components/RoomSlide';
-import Dialog, { DialogType } from '../../../components/Dialog';
-import Calendar from '../../../components/Calendar';
-import { getDateISO } from '../../../components/Calendar/helper';
+import { getRoomById, bookRoom } from '../../api';
+import loading from '../../loading';
+import trans from '../../translation';
+import Amenities from '../Amenities';
+import RoomSlide from '../RoomSlide';
+import Dialog, { DialogType } from '../Dialog';
+import Calendar from '../Calendar';
+import { getDateISO } from '../Calendar/helper';
 import * as Styled from './styles';
-import toCurrency from '../../../helpers/currency';
-import getPriceInfo from '../../../helpers/getPriceInfo';
-import Lightbox from '../../../components/LightBox';
+import toCurrency from '../../helpers/currency';
+import getPriceInfo from '../../helpers/getPriceInfo';
+import Lightbox from '../LightBox';
 
 class RoomPage extends React.Component {
-  static getInitialProps = async ({ query }) => {
-    const roomData = await getRoomById(query.id);
-    return {
-      room: roomData.room[0],
-      booking: roomData.booking,
-      loadFromBrowser: !!process.browser
-    };
-  };
-
   updateBooking(booking) {
     const {
       selectDateStart,

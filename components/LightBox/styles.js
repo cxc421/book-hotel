@@ -45,7 +45,6 @@ const ArrowImgWrapper = styled.div`
   flex-shrink: 0;
   justify-content: center;
   align-items: center;
-  /* background: pink; */
   cursor: pointer;
 
   > * {
@@ -59,7 +58,11 @@ const ArrowImgWrapper = styled.div`
 
   &.disabled {
     opacity: 0.2;
-    pointer-events: none;
+    &:hover {
+      > * {
+        transform: scale(1);
+      }
+    }
   }
 `;
 

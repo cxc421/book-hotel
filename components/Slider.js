@@ -11,7 +11,7 @@ const Container = styled.div`
   width: 100%;
   height: 100%;
   position: relative;
-  background: pink;
+  background: black;
   overflow: hidden;
 
   .slick-custom-common {
@@ -124,12 +124,16 @@ const Slider = ({ imgList = [], type = SliderType.DarkLeft, onClick }) => {
         : 'slick-custom-darkleft')
   };
 
+  function onClickImg(index) {
+    onClick && onClick(index);
+  }
+
   return (
     <Container>
       <Slick {...slickSettings}>
         {imgList.map((img, index) => (
           <div key={index}>
-            <Img src={img.src} type={type} onClick={() => onClick(index)} />
+            <Img src={img.src} type={type} onClick={() => onClickImg(index)} />
           </div>
         ))}
       </Slick>

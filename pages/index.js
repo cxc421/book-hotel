@@ -96,7 +96,6 @@ class IndexPage extends React.Component {
 
   componentDidMount() {
     loading.done();
-    console.log('test');
   }
 
   render() {
