@@ -1,4 +1,5 @@
 import React, { memo, PureComponent } from 'react';
+import { CSSTransition } from 'react-transition-group';
 import * as Styled from './styles';
 import DatePicker from '../Datepicker';
 import Amenities, { AmenityType } from '../Amenities';
@@ -111,11 +112,10 @@ class Dialog extends PureComponent {
   };
 
   renderResult() {
-    const { show, type } = this.props;
-    const className = show ? 'show' : 'hide';
+    const { type } = this.props;
     const isSuccess = type === DialogType.Success;
     return (
-      <Styled.Mask className={className} ref={this.maskRef}>
+      <Styled.Mask ref={this.maskRef}>
         <Styled.DialogContainer
           style={{
             height: 600
@@ -159,7 +159,6 @@ class Dialog extends PureComponent {
 
   render() {
     const {
-      show = false,
       toClose,
       amenities,
       roomName,
@@ -186,7 +185,6 @@ class Dialog extends PureComponent {
     const totalPrice = currency(
       normalDayCount * normalDayPrice + holidayCount * holidayPrice
     );
-    const className = show ? 'show' : 'hide';
     const dayString =
       normalDayCount +
       holidayCount +
@@ -205,7 +203,7 @@ class Dialog extends PureComponent {
     );
 
     return (
-      <Styled.Mask className={className} ref={this.maskRef}>
+      <Styled.Mask ref={this.maskRef}>
         <Styled.DialogContainer>
           <Styled.CloseBtn src="/static/cancel.png" onClick={toClose} />
           <Styled.Left onSubmit={this.onSubmit}>
@@ -306,4 +304,18 @@ class Dialog extends PureComponent {
   }
 }
 
-export default memo(Dialog);
+function DialogWrapper(props) {
+  return (
+    <CSSTransition
+      in={props.show}
+      timeout={200}
+      classNames="dialog"
+      unmountOnExit={true}
+      mountOnEnter={true}
+    >
+      <Dialog {...props} />
+    </CSSTransition>
+  );
+}
+
+export default memo(DialogWrapper);

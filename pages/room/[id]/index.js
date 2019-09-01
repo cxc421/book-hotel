@@ -44,7 +44,7 @@ class RoomPage extends React.Component {
 
   state = {
     ...this.initState(),
-    lightboxShow: true,
+    lightboxShow: false,
     lightboxImgIndex: 0
   };
 

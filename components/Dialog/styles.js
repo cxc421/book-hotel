@@ -9,9 +9,10 @@ export const Mask = styled.div`
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(20px);
 
-  transition: all 200ms;
+  transition: opacity 200ms;
+  opacity: 1;
 
-  &.show {
+  /* &.show {
     opacity: 1;
     visibility: visible;
   }
@@ -19,6 +20,25 @@ export const Mask = styled.div`
   &.hide {
     opacity: 0;
     visibility: hidden;
+  } */
+
+  &.dialog-enter {
+    opacity: 0;
+  }
+  &.dialog-enter-active {
+    opacity: 1;
+  }
+  &.dialog-enter-done {
+    opacity: 1;
+  }
+  &.dialog-exit {
+    opacity: 1;
+  }
+  &.dialog-exit-active {
+    opacity: 0;
+  }
+  &.dialog-exit-done {
+    opacity: 0;
   }
 `;
 
